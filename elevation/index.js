@@ -1,4 +1,5 @@
-import { TileSet } from 'node-hgt';
+// import { TileSet, Hgt } from 'node-hgt';
+import { TileSet } from './node-hgt';
 import fs from 'fs';
 import dotenv from 'dotenv';
 
@@ -45,11 +46,17 @@ function getElevation(coordinates) {
     coordinates.map(
       (coordinate) => new Promise((resolve) => {
         tileset.getElevation(coordinate, function(err, elevation) {
+          // fs.readdirSync(path).forEach(file => {
+          //   console.log(file);
+          //   const fd = fs.openSync(`${path}/N47E008.hgt`, 'r');
+          //   const stat = fs.fstatSync(fd);
+          //   console.log({ stat });
+          // });
+
           if (err) {
             console.log({ err });
             resolve(null);
           } else {
-            console.log(elevation);
             resolve(elevation);
           }
         });
@@ -65,6 +72,7 @@ function getElevation(coordinates) {
  */
 async function main(coordinates) {
   const elevationData = await getElevation(coordinates);
+
   return coordinates.map((coordinate, i) => ({
     ...coordinate,
     elevation: elevationData[i] || '',
