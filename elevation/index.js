@@ -1,4 +1,17 @@
 import { TileSet } from 'node-hgt';
+import fs from 'fs';
+import dotenv from 'dotenv';
+
+import S3Downloader from './S3Downloader';
+
+// load .env vars
+dotenv.config();
+
+const {
+  AWS_DEFAULT_REGION,
+  AWS_DEFAULT_ACCESS_KEY_ID,
+  AWS_DEFAULT_SECRET_ACCESS_KEY,
+} = process.env;
 
 /**
  * Calculate elevation data for coordinates
@@ -6,16 +19,37 @@ import { TileSet } from 'node-hgt';
  * @returns
  */
 function getElevation(coordinates) {
-  const path = `${__dirname}/elevation-data`;
-  const tileset = new TileSet(path);
+  // const path = `${__dirname}/elevation-data`;
+  const path = `${__dirname}/temp`;
+
+  if (!fs.existsSync(path)) {
+    fs.mkdirSync(path);
+  }
+
+  const awsConfig = {
+    accessKeyId: AWS_DEFAULT_ACCESS_KEY_ID,
+    secretAccessKey: AWS_DEFAULT_SECRET_ACCESS_KEY,
+    region: AWS_DEFAULT_REGION,
+  };
+  const downloaderOptions = {
+    awsConfig,
+  };
+  const downloader = new S3Downloader(path, '151434533289-calc-elevation-assets-bucket', downloaderOptions);
+
+  const options = {
+    downloader,
+  };
+  const tileset = new TileSet(path, options);
 
   return Promise.all(
     coordinates.map(
       (coordinate) => new Promise((resolve) => {
         tileset.getElevation(coordinate, function(err, elevation) {
           if (err) {
+            console.log({ err });
             resolve(null);
           } else {
+            console.log(elevation);
             resolve(elevation);
           }
         });
